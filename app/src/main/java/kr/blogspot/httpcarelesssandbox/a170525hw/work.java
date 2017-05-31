@@ -34,7 +34,7 @@ public class work extends AppCompatActivity {
     int selecsec=0;
     int threadsec=0;
 
-    int aftersec=0;
+    boolean calmdown=false;
     boolean isitstop=false;
 
     @Override
@@ -49,47 +49,37 @@ public class work extends AppCompatActivity {
 
     public void onClick(View v){
         if(v.getId()==R.id.imageView){
-            //가동중
-            if(isthistaskstillrunning==1)
-            {
-                isitstop=true;
-                isthistaskstillrunning=2;
+            if(calmdown){
+                icon.setImageResource(R.drawable.safari);
+                picturenumber=4;
+                bottomtext.setText("시작부터 "+0+"초");
+                calmdown=false;
+                isthistaskstillrunning = 1;
             }
-            //가동전
-            else if(isthistaskstillrunning==0)
-            {
-                bottomText=new bottomText();
-                bottomText.execute();
-                isthistaskstillrunning=1;
+            else {
+                //가동중
+                if (isthistaskstillrunning == 1) {
+                    isitstop = true;
+                    isthistaskstillrunning = 2;
+                }
+                //가동전
+                else if (isthistaskstillrunning == 0) {
+                    bottomText = new bottomText();
+                    bottomText.execute();
+                    isthistaskstillrunning = 1;
+                }
             }
-
         }
         else if(v.getId()==R.id.button){
-            if(isthistaskstillrunning==0){
-
-            }
-            else if(isthistaskstillrunning==1){
-                et.setHint("3");
-                bottomText.cancel(true);
-                bottomText=null;
-                icon.setImageResource(R.drawable.start);
-                isthistaskstillrunning=0;
-            }
-            else if(isthistaskstillrunning==2){
-
                 et.setHint("3");
                 icon.setImageResource(R.drawable.start);
-                isthistaskstillrunning=0;
-            }
-            Handler handler=new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    Intent intent = new Intent(work.this,work.class);
-                    startActivity(intent);
-                    finish();
-                }
-            },0);
+                calmdown=true;
+                isitstop=false;
+                selecsec=0;
+                totalsec=0;
+            iconStack=0;
+            threadsec=0;
+            waitsec=0;
         }
 
     }
@@ -142,38 +132,40 @@ public class work extends AppCompatActivity {
         @Override
         protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
-
-            if(isitstop){
+            if(calmdown) {
                 bottomtext.setTextColor(Color.BLACK);
-                browserName=letusseewhattheychoose(picturenumber);
-                selecsec=values[0]+selecsec;
-                bottomtext.setText(browserName+" 선택 "+selecsec+"초");
-
+                bottomtext.setText("처음 화면");
             }
             else{
+                if (isitstop) {
+                    bottomtext.setTextColor(Color.BLACK);
+                    browserName = letusseewhattheychoose(picturenumber);
+                    selecsec = values[0] + selecsec;
+                    bottomtext.setText(browserName + " 선택 " + selecsec + "초");
 
-                //1마다 초제한 불러오기
-                if(et.getText().toString().equals(""))
-                    threadsec=3;
-                else
-                    threadsec=Integer.parseInt(et.getText().toString());
+                } else {
 
-                waitsec=threadsec;
+                    //1마다 초제한 불러오기
+                    if (et.getText().toString().equals(""))
+                        threadsec = 3;
+                    else
+                        threadsec = Integer.parseInt(et.getText().toString());
 
-                //초제한마다 그림 바꾸기
-                iconStack=iconStack+values[0];
-                if(iconStack%waitsec==0)
-                {
-                    picturenumber++;
-                    picturenumber=picturenumber%5;
-                    pick(picturenumber);
+                    waitsec = threadsec;
+
+                    //초제한마다 그림 바꾸기
+                    iconStack = iconStack + values[0];
+                    if (iconStack % waitsec == 0) {
+                        picturenumber++;
+                        picturenumber = picturenumber % 5;
+                        pick(picturenumber);
+                    }
+
+
+                    totalsec = values[0] + totalsec;
+                    bottomtext.setText("시작부터 " + totalsec + "초");
                 }
-
-
-                totalsec=values[0]+totalsec;
-                bottomtext.setText("시작부터 "+totalsec+"초");
             }
-
         }
 
         @Override
